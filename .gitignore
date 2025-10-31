@@ -1,0 +1,42 @@
+# ==========================
+# Global ignores
+# ==========================
+.DS_Store
+Thumbs.db
+
+# ==========================
+# IDE / Editor files
+# ==========================
+.vscode/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# ==========================
+# Java / Spring Boot (data-ingestion-service)
+# ==========================
+data-ingestion-service/target/
+data-ingestion-service/*.log
+data-ingestion-service/*.class
+*.jar
+*.war
+
+# Maven
+.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+
+# ==========================
+# Python (data-simulator)
+# ==========================
+data-simulator/venv/
+data-simulator/__pycache__/
+data-simulator/*.pyc
+*.pyo
+*.pyd
+
+# ==========================
+# Logs / Misc
+# ==========================
+*.log
