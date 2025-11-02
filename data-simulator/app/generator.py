@@ -9,6 +9,12 @@ def generate_data(machineId):
     motor_current = random.uniform(0 , 100) # % full load current
     oil_level = random.uniform(0,100)
     duty_cycle = random.uniform(0,100)
+    status = "NORMAL"
+    if(temperature > 110 or vibration > 10 or pressure < 7):
+        status = "CRITICAL"
+    elif (temperature > 90 or vibration > 7 or pressure < 8):
+        status = "WARNING";
+
 
     return {
         "machine_id" : f"MCH-{machineId}",
@@ -20,7 +26,8 @@ def generate_data(machineId):
         "motor_current" : motor_current,
         "oil_level" : oil_level,
         "duty_cycle" : duty_cycle,
-        "timeStamp" : datetime.datetime.now().isoformat() 
+        "timeStamp" : datetime.datetime.now().isoformat(),
+        "status":status
     }
 
 

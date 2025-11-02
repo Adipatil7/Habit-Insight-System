@@ -41,8 +41,12 @@ public class MachineData {
     @JsonProperty("oil_level")
     private double oilLevel;
 
-    @JsonProperty("dutyLevel")
+    @JsonProperty("duty_cycle")
     private double dutyLevel;
 
-    private LocalDateTime timeStamp;
+    @JsonProperty("timeStamp")
+    private LocalDateTime dateTime;
+
+    private String status;
+
 }
