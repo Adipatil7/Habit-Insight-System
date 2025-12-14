@@ -60,6 +60,14 @@ public class dataIngestionServiceImpl implements DataIngestionService{
         if (readings.isEmpty()) return null;
 
         return new MachineHealthDto(readings);
+    }
+
+    @Override
+    public MachineData getLatestData(String machineId) {
+        return this.repo.
+                        findTopByMachineIdOrderByDateTimeDesc(machineId).
+                        orElseThrow(()->
+                            new RuntimeException("No data found for machine: "+machineId));
     } 
 
     

@@ -12,6 +12,8 @@ public interface DataIngestionService {
 
     List<MachineData> getData(String machineId);
 
+    MachineData getLatestData(String machineId);
+
     List<MachineData> getRecentData(String machineId);
 
     List<MachineData> getCustomData(String machineId , LocalDateTime t1 , LocalDateTime t2);

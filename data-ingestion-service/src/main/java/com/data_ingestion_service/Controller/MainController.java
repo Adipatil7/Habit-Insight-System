@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +20,7 @@ import com.data_ingestion_service.DTO.MachineHealthDto;
 import com.data_ingestion_service.Entity.MachineData;
 import com.data_ingestion_service.Service.DataIngestionService;
 
-
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController()
 @RequestMapping("api/v1")
 public class MainController {
@@ -38,10 +39,8 @@ public class MainController {
     }
 
     @GetMapping("/latest/{machineId}")
-    public ResponseEntity<List<MachineData>> fetchData(@PathVariable String machineId){
-        List<MachineData> list = this.dataIngestionservice.getData(machineId);
-        System.out.println(list);
-        return ResponseEntity.ok(list);
+    public ResponseEntity<MachineData> fetchData(@PathVariable String machineId){
+        return ResponseEntity.ok(this.dataIngestionservice.getLatestData(machineId));
     }
 
     @GetMapping("/recent/{machineId}")

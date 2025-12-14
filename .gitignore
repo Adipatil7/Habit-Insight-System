@@ -40,3 +40,15 @@ data-simulator/*.pyc
 # Logs / Misc
 # ==========================
 *.log
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Node / Next.js
+node_modules/
+.next/
+.env
+
+# OS
+.DS_Store
