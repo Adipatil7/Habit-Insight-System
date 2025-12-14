@@ -39,23 +39,26 @@ function StatCard({
 }
 
 export default function DashboardClient() {
-  const [machineId,setMachineId] = React.useState<string>("MCH-1");
+  const [machineId, setMachineId] = React.useState<string>("MCH-1");
   const { data, error, isLoading } = useMachine(machineId, 6000);
   const MACHINES = ["MCH-1", "MCH-2", "MCH-3", "MCH-4", "MCH-5"];
+  const [attr, setAttr] = React.useState<
+    "temperature" | "vibration" | "pressure"
+  >("temperature");
 
   const chartData = React.useMemo(() => {
     if (!data) {
       return Array.from({ length: 20 }).map((_, i) => ({
         ts: `T${i + 1}`,
-        temp: 65 + Math.sin(i / 3) * 4 + Math.random() * 2,
+        value: 0,
       }));
     }
 
     return Array.from({ length: 20 }).map((_, i) => ({
       ts: `${i + 1}`,
-      temp: +(data.temperature + Math.sin(i / 3) * 1.2).toFixed(2),
+      value: Number((data[attr] + Math.sin(i / 3) * 1.2).toFixed(2)),
     }));
-  }, [data]);
+  }, [data, attr]);
 
   return (
     <div>
@@ -129,14 +132,36 @@ export default function DashboardClient() {
         {/* Chart */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-gray-900">
-              Temperature (last samples)
+            {/* Left: title */}
+            <h2 className="text-lg font-medium text-gray-900 capitalize">
+              {attr} (last samples)
             </h2>
-            <div className="text-sm text-gray-600">
-              {data ? new Date(data.timeStamp).toLocaleTimeString() : "demo"}
+
+            {/* Right: controls */}
+            <div className="flex items-center gap-3">
+              {/* Attribute selector */}
+              <select
+                value={attr}
+                onChange={(e) =>
+                  setAttr(
+                    e.target.value as "temperature" | "vibration" | "pressure"
+                  )
+                }
+                className="border border-gray-300 text-gray-900 rounded-lg px-3 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-300 capitalize"
+              >
+                <option value="temperature">Temperature</option>
+                <option value="vibration">Vibration</option>
+                <option value="pressure">Pressure</option>
+              </select>
+
+              {/* Timestamp */}
+              <div className="text-sm text-gray-600">
+                {data ? new Date(data.timeStamp).toLocaleTimeString() : "demo"}
+              </div>
             </div>
           </div>
 
+          {/* Chart */}
           <div className="w-full h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
@@ -145,11 +170,14 @@ export default function DashboardClient() {
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="ts" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
+                <YAxis
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(v) => v.toFixed(1)}
+                />
                 <Tooltip />
                 <Line
                   type="monotone"
-                  dataKey="temp"
+                  dataKey="value"
                   dot={false}
                   stroke="#1f2937"
                   strokeWidth={2}
