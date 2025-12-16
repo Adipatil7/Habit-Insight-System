@@ -3,6 +3,7 @@
 
 import React from "react";
 import { useMachine } from "@/hooks/useMachine";
+import { useMachineCustomRange } from "@/hooks/useMachineCustomeRange";
 import {
   ResponsiveContainer,
   LineChart,
@@ -39,36 +40,69 @@ function StatCard({
 }
 
 export default function DashboardClient() {
-  const [machineId, setMachineId] = React.useState<string>("MCH-1");
-  const { data, error, isLoading } = useMachine(machineId, 6000);
-  const MACHINES = ["MCH-1", "MCH-2", "MCH-3", "MCH-4", "MCH-5"];
+  const [machineId, setMachineId] = React.useState("MCH-1");
+
+  // Live snapshot (polling)
+  const { data, error, isLoading } = useMachine(machineId, 3000);
+
+  // Time range state
+  const [range, setRange] = React.useState<"1h" | "6h" | "24h">("1h");
+  const [from, setFrom] = React.useState<Date>(
+    () => new Date(Date.now() - 60 * 60 * 1000)
+  );
+  const [to, setTo] = React.useState<Date>(() => new Date());
+
+  // Custom range data (NO polling)
+  const {
+    data: custom,
+    loading: customLoading,
+    error: customError,
+  } = useMachineCustomRange(machineId, from, to);
+
   const [attr, setAttr] = React.useState<
     "temperature" | "vibration" | "pressure"
   >("temperature");
 
-  const chartData = React.useMemo(() => {
-    if (!data) {
-      return Array.from({ length: 20 }).map((_, i) => ({
-        ts: `T${i + 1}`,
-        value: 0,
-      }));
-    }
+  // ✅ FIX: Use useCallback to memoize the function properly
+  const applyRange = React.useCallback(() => {
+    const now = new Date();
+    let hours = 1;
+    if (range === "6h") hours = 6;
+    if (range === "24h") hours = 24;
 
-    return Array.from({ length: 20 }).map((_, i) => ({
-      ts: `${i + 1}`,
-      value: Number((data[attr] + Math.sin(i / 3) * 1.2).toFixed(2)),
+    setTo(now);
+    setFrom(new Date(now.getTime() - hours * 60 * 60 * 1000));
+  }, [range]); // ✅ Include range as dependency
+
+  // ✅ FIX: Remove the initial useEffect, rely on default state values
+  // The initial state already sets from/to correctly, no need to call applyRange on mount
+
+  // ✅ FIXED chartData (uses custom data)
+  const chartData = React.useMemo(() => {
+    if (!custom || custom.length === 0) {
+      console.log("No custom data available for chart");
+      return [];
+    }
+    console.log("Custom data for chart:", custom);
+    return custom.map((row) => ({
+      ts: new Date(row.timeStamp).toLocaleTimeString(),
+      value: row[attr],
     }));
-  }, [data, attr]);
+  }, [custom, attr]);
+
+  React.useEffect(() => {
+    console.log("CUSTOM DATA ARRIVED:", custom?.length);
+  }, [custom]);
 
   return (
     <div>
+      {/* Machine selector */}
       <div className="flex items-center justify-end mb-4">
         <label className="text-sm text-gray-200 mr-2">Select machine:</label>
-
         <select
           value={machineId}
           onChange={(e) => setMachineId(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1 text-sm bg-black focus:outline-none focus:ring-2 focus:ring-gray-300"
+          className="border border-gray-300 rounded-lg px-3 py-1 text-sm bg-black text-white"
         >
           {["MCH-1", "MCH-2", "MCH-3", "MCH-4", "MCH-5"].map((id) => (
             <option key={id} value={id}>
@@ -85,17 +119,10 @@ export default function DashboardClient() {
             Predictive Maintenance Platform
           </h1>
           <p className="text-sm text-gray-300">
-            Machine: <span className="font-medium">{machineId}</span> · Live
-            metrics
+            Machine: <span className="font-medium">{machineId}</span>
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-sm text-gray-500 hidden sm:block">
-            Environment: staging
-          </div>
-          <div className="text-sm text-gray-500">v0.1</div>
-        </div>
+        <div className="text-sm text-gray-500">v0.1</div>
       </header>
 
       {/* Stat cards */}
@@ -103,27 +130,20 @@ export default function DashboardClient() {
         <StatCard
           title="Temperature"
           value={
-            isLoading
-              ? "—"
-              : `${data ? data.temperature.toFixed(2) : "72.0"} °C`
+            isLoading ? "—" : `${data ? data.temperature.toFixed(2) : "—"} °C`
           }
-          delta={data ? "stable" : "demo"}
         />
-
         <StatCard
           title="Vibration"
           value={
-            isLoading ? "—" : `${data ? data.vibration.toFixed(2) : "3.4"} m/s²`
+            isLoading ? "—" : `${data ? data.vibration.toFixed(2) : "—"} m/s²`
           }
-          delta={data ? "nominal" : "demo"}
         />
-
         <StatCard
           title="Pressure"
           value={
-            isLoading ? "—" : `${data ? data.pressure.toFixed(2) : "8.5"} bar`
+            isLoading ? "—" : `${data ? data.pressure.toFixed(2) : "—"} bar`
           }
-          delta={data ? "normal" : "demo"}
         />
       </section>
 
@@ -132,14 +152,11 @@ export default function DashboardClient() {
         {/* Chart */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
-            {/* Left: title */}
             <h2 className="text-lg font-medium text-gray-900 capitalize">
-              {attr} (last samples)
+              {attr} trend
             </h2>
 
-            {/* Right: controls */}
             <div className="flex items-center gap-3">
-              {/* Attribute selector */}
               <select
                 value={attr}
                 onChange={(e) =>
@@ -147,44 +164,65 @@ export default function DashboardClient() {
                     e.target.value as "temperature" | "vibration" | "pressure"
                   )
                 }
-                className="border border-gray-300 text-gray-900 rounded-lg px-3 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-300 capitalize"
+                className="border border-gray-300 rounded-lg px-3 py-1 text-sm bg-white"
               >
                 <option value="temperature">Temperature</option>
                 <option value="vibration">Vibration</option>
                 <option value="pressure">Pressure</option>
               </select>
 
-              {/* Timestamp */}
-              <div className="text-sm text-gray-600">
-                {data ? new Date(data.timeStamp).toLocaleTimeString() : "demo"}
-              </div>
+              <select
+                value={range}
+                onChange={(e) =>
+                  setRange(e.target.value as "1h" | "6h" | "24h")
+                }
+                className="border border-gray-300 rounded-lg px-3 py-1 text-sm bg-white"
+              >
+                <option value="1h">Last 1 hour</option>
+                <option value="6h">Last 6 hours</option>
+                <option value="24h">Last 24 hours</option>
+              </select>
+
+              <button
+                onClick={applyRange}
+                className="px-4 py-1.5 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-800"
+              >
+                Apply
+              </button>
             </div>
           </div>
 
-          {/* Chart */}
-          <div className="w-full h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={chartData}
-                margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="ts" tick={{ fontSize: 12 }} />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(v) => v.toFixed(1)}
-                />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  dot={false}
-                  stroke="#1f2937"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {customLoading ? (
+            <div className="h-80 flex items-center justify-center text-gray-500">
+              Loading chart data…
+            </div>
+          ) : customError ? (
+            <div className="h-80 flex items-center justify-center text-red-500">
+              Failed to load historical data
+            </div>
+          ) : chartData.length === 0 ? (
+            <div className="h-80 flex items-center justify-center text-gray-400">
+              No historical data available
+            </div>
+          ) : (
+            <div className="w-full h-80">
+              <ResponsiveContainer>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="ts" />
+                  <YAxis tickFormatter={(v) => v.toFixed(1)} />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#1f2937"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
         {/* Recent events */}
@@ -193,57 +231,33 @@ export default function DashboardClient() {
             Recent events
           </h3>
 
-          <div className="text-sm text-gray-700">
-            {error ? (
-              <div className="text-red-600">Error fetching data</div>
-            ) : isLoading ? (
-              <div>Loading latest readings…</div>
-            ) : !data ? (
-              <div className="text-gray-500">No data available</div>
-            ) : (
-              <ul className="space-y-3">
-                <li>
-                  <div className="font-medium text-gray-900">
-                    Temperature: {data.temperature.toFixed(2)} °C
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    {new Date(data.timeStamp).toLocaleString()}
-                  </div>
-                </li>
-
-                <li>
-                  <div className="font-medium text-gray-900">
-                    Vibration: {data.vibration.toFixed(2)} m/s²
-                  </div>
-                  <div className="text-xs text-gray-600">Sensor nominal</div>
-                </li>
-
-                <li>
-                  <div className="font-medium text-gray-900">
-                    Pressure: {data.pressure.toFixed(2)} bar
-                  </div>
-                  <div className="text-xs text-gray-600">Within safe range</div>
-                </li>
-
-                <li>
-                  <div className="font-medium text-gray-900">
-                    Status:{" "}
-                    <span
-                      className={
-                        data.status === "CRITICAL"
-                          ? "text-red-600"
-                          : data.status === "WARNING"
-                          ? "text-yellow-600"
-                          : "text-green-600"
-                      }
-                    >
-                      {data.status}
-                    </span>
-                  </div>
-                </li>
-              </ul>
-            )}
-          </div>
+          {error ? (
+            <div className="text-red-600">Error fetching data</div>
+          ) : isLoading ? (
+            <div>Loading latest readings…</div>
+          ) : !data ? (
+            <div className="text-gray-500">No data available</div>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              <li>Temperature: {data.temperature.toFixed(2)} °C</li>
+              <li>Vibration: {data.vibration.toFixed(2)} m/s²</li>
+              <li>Pressure: {data.pressure.toFixed(2)} bar</li>
+              <li>
+                Status:{" "}
+                <span
+                  className={
+                    data.status === "CRITICAL"
+                      ? "text-red-600"
+                      : data.status === "WARNING"
+                      ? "text-yellow-600"
+                      : "text-green-600"
+                  }
+                >
+                  {data.status}
+                </span>
+              </li>
+            </ul>
+          )}
         </aside>
       </section>
     </div>

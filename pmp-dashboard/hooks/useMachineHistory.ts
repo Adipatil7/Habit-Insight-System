@@ -1,4 +1,3 @@
-// src/hooks/useMachine.ts
 import useSWR from "swr";
 
 export type MachineReading = {
@@ -15,7 +14,6 @@ export type MachineReading = {
   status: string;
 };
 
-
 const fetcher = (url: string) => fetch(url).then((r) => {
   if (!r.ok) throw new Error("Network response was not ok");
   return r.json();
@@ -23,9 +21,9 @@ const fetcher = (url: string) => fetch(url).then((r) => {
 
 const API_BASE = "http://localhost:8080";
 
-export function useMachine(machineId:string,pollMs = 4000) {
-  const { data, error, isLoading } = useSWR<MachineReading>(
-    machineId ? `${API_BASE}/api/v1/latest/${machineId}` : null,
+export function useMachineHistory(machineId:string,pollMs = 4000) {
+  const { data, error, isLoading } = useSWR<MachineReading[]>(
+    machineId ? `${API_BASE}/api/v1/recent/${machineId}` : null,
     fetcher,
     { refreshInterval: pollMs, revalidateOnFocus: false }
   );
@@ -36,6 +34,4 @@ export function useMachine(machineId:string,pollMs = 4000) {
     isLoading,
   };
 }
-
-
 
