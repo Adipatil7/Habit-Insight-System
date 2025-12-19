@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.data_ingestion_service.DTO.MachineHealthDto;
 import com.data_ingestion_service.DTO.TimeRangeRequest;
 import com.data_ingestion_service.Entity.MachineData;
+import com.data_ingestion_service.Service.AlertService;
 import com.data_ingestion_service.Service.DataIngestionService;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -32,11 +32,14 @@ public class MainController {
     @Autowired
     private DataIngestionService dataIngestionservice;
 
+    @Autowired
+    private AlertService alertService;
+
     @PostMapping("/sendData")
     public ResponseEntity<String> getData(@RequestBody MachineData data) {
 
         this.dataIngestionservice.addData(data);
-
+        this.alertService.evaluateAndGenerateAlerts(data);
         return ResponseEntity.ok("data recieved successfully !!");
 
     }

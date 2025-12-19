@@ -164,7 +164,7 @@ export default function DashboardClient() {
                     e.target.value as "temperature" | "vibration" | "pressure"
                   )
                 }
-                className="border border-gray-300 rounded-lg px-3 py-1 text-sm bg-white"
+                className="border border-gray-600 rounded-lg px-3 py-1 text-sm bg-white text-black"
               >
                 <option value="temperature">Temperature</option>
                 <option value="vibration">Vibration</option>
@@ -176,7 +176,7 @@ export default function DashboardClient() {
                 onChange={(e) =>
                   setRange(e.target.value as "1h" | "6h" | "24h")
                 }
-                className="border border-gray-300 rounded-lg px-3 py-1 text-sm bg-white"
+                className="border border-gray-600 text-black rounded-lg px-3 py-1 text-sm bg-white"
               >
                 <option value="1h">Last 1 hour</option>
                 <option value="6h">Last 6 hours</option>
@@ -238,10 +238,11 @@ export default function DashboardClient() {
           ) : !data ? (
             <div className="text-gray-500">No data available</div>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-sm text-gray-800">
               <li>Temperature: {data.temperature.toFixed(2)} °C</li>
               <li>Vibration: {data.vibration.toFixed(2)} m/s²</li>
               <li>Pressure: {data.pressure.toFixed(2)} bar</li>
+              
               <li>
                 Status:{" "}
                 <span
