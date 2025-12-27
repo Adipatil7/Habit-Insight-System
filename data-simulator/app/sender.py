@@ -1,9 +1,23 @@
-import requests
-from config import BACKEND_URL
+import json
+from confluent_kafka import Producer
+from config import KAFKA_BOOTSTRAP_SERVERS, KAFKA_TOPIC
 
-def data_sender(data):
-    try:
-        response = requests.post(BACKEND_URL , json=data)
-        print(f"Sent: {data['machine_id']} | Status: {response.status_code}")
-    except Exception as e:
-        print("Error sending data: ",e) 
+producer_conf = {
+    "bootstrap.servers": KAFKA_BOOTSTRAP_SERVERS
+}
+
+producer = Producer(producer_conf)
+
+def delivery_report(err, msg):
+    if err:
+        print(f"Kafka delivery failed: {err}")
+    else:
+        print(f"Kafka message sent to {msg.topic()} [{msg.partition()}]")
+
+def data_sender(data: dict):
+    producer.produce(
+        topic=KAFKA_TOPIC,
+        value=json.dumps(data),
+        callback=delivery_report
+    )
+    producer.poll(0)

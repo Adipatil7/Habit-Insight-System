@@ -1,3 +1,5 @@
-BACKEND_URL = "http://localhost:8080/api/v1/sendData"
+KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
+KAFKA_TOPIC = "mecha-data"
+
 NUM_MACHINES = 5
-INTERVAL = 5 #SECONDS
+INTERVAL = 5

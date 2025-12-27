@@ -2,10 +2,9 @@ import random, datetime
 
 def generate_data(machineId):
 
-    # Decide operating mode (controls rarity)
     mode = random.choices(
         ["NORMAL", "WARNING", "CRITICAL"],
-        weights=[50, 25, 25],  # CRITICAL is now RARE
+        weights=[50, 25, 25],
         k=1
     )[0]
 
@@ -24,14 +23,12 @@ def generate_data(machineId):
         vibration = random.uniform(8.0, 14.0)
         pressure = random.uniform(6, 7.5)
 
-    # Other parameters (kept random, non-critical)
     rpm = random.uniform(1000, 6000)
-    motor_voltage = random.uniform(370, 460)
-    motor_current = random.uniform(0, 100)
-    oil_level = random.uniform(0, 100)
-    duty_cycle = random.uniform(0, 100)
+    motorVoltage = random.uniform(370, 460)
+    motorCurrent = random.uniform(0, 100)
+    oilLevel = random.uniform(0, 100)
+    dutyCycle = random.uniform(0, 100)
 
-    # SAME status logic as before (unchanged)
     status = "NORMAL"
     if temperature > 110 or vibration > 10 or pressure < 7:
         status = "CRITICAL"
@@ -39,15 +36,15 @@ def generate_data(machineId):
         status = "WARNING"
 
     return {
-        "machine_id": f"MCH-{machineId}",
+        "machineId": f"MCH-{machineId}",
         "temperature": round(temperature, 2),
         "vibration": round(vibration, 2),
         "pressure": round(pressure, 2),
         "rpm": round(rpm, 2),
-        "motor_voltage": round(motor_voltage, 2),
-        "motor_current": round(motor_current, 2),
-        "oil_level": round(oil_level, 2),
-        "duty_cycle": round(duty_cycle, 2),
-        "timeStamp": datetime.datetime.now().isoformat(),
+        "motorVoltage": round(motorVoltage, 2),
+        "motorCurrent": round(motorCurrent, 2),
+        "oilLevel": round(oilLevel, 2),
+        "dutyCycle": round(dutyCycle, 2),
+        "timestamp": datetime.datetime.now().isoformat(),
         "status": status
     }

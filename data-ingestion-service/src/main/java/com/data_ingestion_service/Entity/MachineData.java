@@ -24,7 +24,6 @@ public class MachineData {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
-    @JsonProperty("machine_id")
     private String machineId;
     
     private double temperature;
@@ -32,19 +31,14 @@ public class MachineData {
     private double pressure;
     private double rpm;
 
-    @JsonProperty("motor_voltage")
     private double motorVoltage;
 
-    @JsonProperty("motor_current")
     private double motorCurrent;
 
-    @JsonProperty("oil_level")
     private double oilLevel;
 
-    @JsonProperty("duty_cycle")
     private double dutyLevel;
 
-    @JsonProperty("timeStamp")
     private LocalDateTime dateTime;
 
     private String status;

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.data_ingestion_service.DTO.MachineHealthDto;
+import com.data_ingestion_service.DTO.MachineReadingEvent;
 import com.data_ingestion_service.Entity.MachineData;
 
 public interface DataIngestionService {
@@ -21,5 +22,7 @@ public interface DataIngestionService {
     int delete(String machineId);
 
     MachineHealthDto getHealthForMachine(String machineId , int hours);
+
+    void saveFromKafka(MachineReadingEvent event);
     
 }

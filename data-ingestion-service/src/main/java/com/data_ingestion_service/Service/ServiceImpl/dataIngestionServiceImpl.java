@@ -8,15 +8,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.data_ingestion_service.DTO.MachineHealthDto;
+import com.data_ingestion_service.DTO.MachineReadingEvent;
 import com.data_ingestion_service.Entity.MachineData;
 import com.data_ingestion_service.Repository.dataIngestinRepo;
 import com.data_ingestion_service.Service.DataIngestionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 @Service
 public class dataIngestionServiceImpl implements DataIngestionService{
 
     @Autowired
     private dataIngestinRepo repo;
+
+    private static final Logger log =
+        LoggerFactory.getLogger(dataIngestionServiceImpl.class);
+
 
     @SuppressWarnings("null")
     @Override
@@ -69,6 +77,35 @@ public class dataIngestionServiceImpl implements DataIngestionService{
                         orElseThrow(()->
                             new RuntimeException("No data found for machine: "+machineId));
     } 
+
+    @Override
+public void saveFromKafka(MachineReadingEvent event) {
+
+    if (event.getTimestamp() == null || event.getMachineId() == null) {
+        log.error("Invalid Kafka event received: {}", event);
+        return; // skip bad record
+    }
+
+
+    MachineData data = new MachineData();
+
+    data.setMachineId(event.getMachineId());
+    data.setTemperature(event.getTemperature());
+    data.setVibration(event.getVibration());
+    data.setPressure(event.getPressure());
+    data.setRpm(event.getRpm());
+    data.setMotorVoltage(event.getMotorVoltage());
+    data.setMotorCurrent(event.getMotorCurrent());
+    data.setOilLevel(event.getOilLevel());
+    data.setDutyLevel(event.getDutyCycle());
+    data.setStatus(event.getStatus());
+
+    data.setDateTime(
+            java.time.LocalDateTime.parse(event.getTimestamp())
+    );
+
+    repo.save(data);
+}
 
     
     
