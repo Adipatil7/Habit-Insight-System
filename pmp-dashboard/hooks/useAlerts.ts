@@ -51,15 +51,29 @@ export const useAlerts = () => {
     return () => clearInterval(interval);
   }, [loadActiveAlerts]);
 
-  const acknowledge = async (alertId: number) => {
-    await acknowledgeAlert(alertId);
-    loadActiveAlerts();
-  };
 
-  const resolve = async (alertId: number) => {
-    await resolveAlert(alertId);
-    loadActiveAlerts();
-  };
+const acknowledge = async (id: number) => {
+    try {
+        await acknowledgeAlert(id);
+        toast.success("Alert acknowledged");
+        loadActiveAlerts();
+    } catch (err: any) {
+        toast.error(err.message || "Unable to acknowledge alert");
+    }
+};
+
+
+
+const resolve = async (id: number) => {
+    try {
+        await resolveAlert(id);
+        toast.success("Alert resolved");
+        loadActiveAlerts();
+    } catch (err: any) {
+        toast.error(err.message || "Unable to resolve alert");
+    }
+};
+
 
   return {
     alerts,

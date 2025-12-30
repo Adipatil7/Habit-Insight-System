@@ -2,12 +2,11 @@ package com.data_ingestion_service.Service;
 
 import java.util.List;
 
+import com.data_ingestion_service.DTO.MachineReadingEvent;
 import com.data_ingestion_service.Entity.Alert;
-import com.data_ingestion_service.Entity.MachineData;
-
 public interface AlertService {
 
-    void evaluateAndGenerateAlerts(MachineData data);
+    void evaluateAndGenerateAlerts(MachineReadingEvent event);
 
     List<Alert> getActiveAlerts();
 

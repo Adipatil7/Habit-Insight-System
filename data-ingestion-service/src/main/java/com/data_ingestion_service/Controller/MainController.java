@@ -39,7 +39,7 @@ public class MainController {
     public ResponseEntity<String> getData(@RequestBody MachineData data) {
 
         this.dataIngestionservice.addData(data);
-        this.alertService.evaluateAndGenerateAlerts(data);
+
         return ResponseEntity.ok("data recieved successfully !!");
 
     }

@@ -4,8 +4,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import com.data_ingestion_service.DTO.MachineReadingEvent;
 import com.data_ingestion_service.Entity.Alert;
 import com.data_ingestion_service.Entity.MachineData;
 import com.data_ingestion_service.Enums.AlertStatus;
@@ -20,13 +23,18 @@ public class AlertServiceImpl implements AlertService {
     private final AlertRepo alertRepo;
 
     @Autowired
+    private MachineDataConversionImpl dataConverter;
+
+    @Autowired
     public AlertServiceImpl(List<AlertRule> alertRules, AlertRepo alertRepo) {
         this.alertRules = alertRules;
         this.alertRepo = alertRepo;
     }
 
     @Override
-    public void evaluateAndGenerateAlerts(MachineData data) {
+    public void evaluateAndGenerateAlerts(MachineReadingEvent event) {
+
+        MachineData data = dataConverter.convertData(event);
 
         for (AlertRule rule : alertRules) {
             boolean matched = rule.matches(data);
@@ -55,31 +63,54 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public Alert acknowledgeAlert(Long alertId) {
-         return alertRepo.findById(alertId).map(alert -> {
+public Alert acknowledgeAlert(Long alertId) {
 
-            if(alert.getStatus() != AlertStatus.ACTIVE){
-                throw new IllegalStateException("Only ACTIVE alerts can be acknowledged.");
-            }
+    Alert alert = alertRepo.findById(alertId)
+        .orElseThrow(() ->
+            new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Alert not found with id: " + alertId
+            )
+        );
 
-            alert.setStatus(AlertStatus.ACKNOWLEDGED);
-            alert.setAcknowledgedAt(LocalDateTime.now());
-            return alertRepo.save(alert);
-         }).orElseThrow(() -> new RuntimeException("Alert not found with id: " + alertId)
-        );  
+    if (alert.getStatus() != AlertStatus.ACTIVE) {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Only ACTIVE alerts can be acknowledged"
+        );
     }
+
+    alert.setStatus(AlertStatus.ACKNOWLEDGED);
+    alert.setAcknowledgedAt(LocalDateTime.now());
+
+    return alertRepo.save(alert);
+}
+
 
     @Override
-    public Alert resolveAlert(Long alertId) {
-        return alertRepo.findById(alertId).map(alert->{
-            if(alert.getStatus() == AlertStatus.RESOLVED){
-                throw new IllegalStateException("Alert is already RESOLVED.");
-            }
-            alert.setStatus(AlertStatus.RESOLVED);
-            alert.setResolvedAt(LocalDateTime.now());
-            return alertRepo.save(alert);
-        }).orElseThrow(() -> new RuntimeException("Alert not found with id: " + alertId));  
+public Alert resolveAlert(Long alertId) {
+
+    Alert alert = alertRepo.findById(alertId)
+        .orElseThrow(() ->
+            new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Alert not found with id: " + alertId
+            )
+        );
+
+    if (alert.getStatus() == AlertStatus.RESOLVED) {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Alert is already RESOLVED."
+        );
     }
+
+    alert.setStatus(AlertStatus.RESOLVED);
+    alert.setResolvedAt(LocalDateTime.now());
+
+    return alertRepo.save(alert);
+}
+
 
     @Override
     public List<Alert> getAlertsForMachine(String machineId) {

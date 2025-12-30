@@ -23,4 +23,7 @@ public interface dataIngestinRepo extends JpaRepository<MachineData , Integer> {
     Optional<MachineData>
     findTopByMachineIdOrderByDateTimeDesc(String machineId);
 
+    // top 2 readings of given machine
+    List<MachineData>  findTop2ByMachineIdOrderByDateTimeDesc(String machineId);
+
 }

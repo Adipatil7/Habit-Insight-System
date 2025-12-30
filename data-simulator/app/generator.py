@@ -4,7 +4,7 @@ def generate_data(machineId):
 
     mode = random.choices(
         ["NORMAL", "WARNING", "CRITICAL"],
-        weights=[50, 25, 25],
+        weights=[60, 25, 15],
         k=1
     )[0]
 

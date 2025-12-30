@@ -2,8 +2,6 @@ package com.data_ingestion_service.Entity;
 
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -42,5 +40,9 @@ public class MachineData {
     private LocalDateTime dateTime;
 
     private String status;
+
+    private double healthScore;
+
+    private boolean failureFlag;
 
 }

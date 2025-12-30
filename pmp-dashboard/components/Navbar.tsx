@@ -39,7 +39,7 @@ export default function Navbar() {
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 5000,
+          duration: 3000,
         }}
       />
     </>

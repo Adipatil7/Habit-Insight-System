@@ -22,6 +22,9 @@ public class dataIngestionServiceImpl implements DataIngestionService{
     @Autowired
     private dataIngestinRepo repo;
 
+    @Autowired
+    private MachineDataConversionImpl dataConverter;
+
     private static final Logger log =
         LoggerFactory.getLogger(dataIngestionServiceImpl.class);
 
@@ -87,26 +90,10 @@ public void saveFromKafka(MachineReadingEvent event) {
     }
 
 
-    MachineData data = new MachineData();
-
-    data.setMachineId(event.getMachineId());
-    data.setTemperature(event.getTemperature());
-    data.setVibration(event.getVibration());
-    data.setPressure(event.getPressure());
-    data.setRpm(event.getRpm());
-    data.setMotorVoltage(event.getMotorVoltage());
-    data.setMotorCurrent(event.getMotorCurrent());
-    data.setOilLevel(event.getOilLevel());
-    data.setDutyLevel(event.getDutyCycle());
-    data.setStatus(event.getStatus());
-
-    data.setDateTime(
-            java.time.LocalDateTime.parse(event.getTimestamp())
-    );
+    MachineData data = dataConverter.convertData(event);
 
     repo.save(data);
 }
-
-    
+   
     
 }

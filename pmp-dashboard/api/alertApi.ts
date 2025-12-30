@@ -25,14 +25,38 @@ export const fetchActiveAlerts = async (): Promise<Alert[]> => {
 
 
 export const acknowledgeAlert = async (alertId: number): Promise<Alert> => {
-    const res = await axios.patch(`${BASE_URL}/${alertId}/acknowledge`);
-    return res.data;
-}
+    try {
+        const res = await axios.patch(`${BASE_URL}/acknowledge/${alertId}`);
+        return res.data;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const message =
+                error.response?.data?.message ||
+                error.response?.data ||
+                "Failed to acknowledge alert";
+            throw new Error(message);
+        }
+        throw new Error("Unexpected error occurred");
+    }
+};
 
-export const resolveAlert = async (alerdId: number): Promise<Alert> => {
-    const res = await axios.patch(`${BASE_URL}/${alerdId}/resolve`);
-    return res.data;
-}
+
+export const resolveAlert = async (alertId: number): Promise<Alert> => {
+    try {
+        const res = await axios.patch(`${BASE_URL}/resolve/${alertId}`);
+        return res.data;
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const message =
+                error.response?.data?.message ||
+                error.response?.data ||
+                "Failed to resolve alert";
+            throw new Error(message);
+        }
+        throw new Error("Unexpected error occurred");
+    }
+};
+
 
 export const fetchAlertsForMachine = async (machineId: string): Promise<Alert[]> => {
   const res = await axios.get(`${BASE_URL}/machine/${machineId}`);
